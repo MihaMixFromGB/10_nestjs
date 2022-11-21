@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { News } from './news.interface';
 
-export class CreateNewsDto implements Omit<News, 'id'> {
+export class NewsDto implements Omit<News, 'id'> {
   @IsNotEmpty()
   @ApiProperty({ default: 'new author' })
   title: string;
@@ -20,16 +20,4 @@ export class CreateNewsDto implements Omit<News, 'id'> {
   @IsDateString()
   @ApiProperty({ default: '2022' })
   createdAt: string;
-}
-
-export class NewsDto extends CreateNewsDto {
-  @IsNotEmpty()
-  @ApiProperty()
-  id: string;
-}
-
-export class DeleteNewsDto {
-  @IsNotEmpty()
-  @ApiProperty()
-  id: string;
 }

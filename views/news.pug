@@ -1,0 +1,10 @@
+extends layout.pug
+
+block content
+  div(class='flex flex-col gap-y-2 pt-1')
+    each item of news
+      div(class='bg-slate-100 p-2 drop-shadow-md')
+        h2(class='text-xl font-bold text-stone-800')= item.title
+        p(class='text-sm text-stone-500') Author: #{item.author}
+        p(class='text-sm text-stone-500') Created at: #{item.createdAt}
+        p= item.description
