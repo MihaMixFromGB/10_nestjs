@@ -17,6 +17,12 @@ export class NewsDto implements Omit<News, 'id'> {
   @ApiPropertyOptional({ default: 'new author' })
   author?: string;
 
+  @IsOptional()
+  @ApiProperty()
+  @ApiPropertyOptional({ default: 'qJnUSuBesExYtg1762efZ.jpg' })
+  cover?: string;
+
+  @IsNotEmpty()
   @IsDateString()
   @ApiProperty({ default: '2022' })
   createdAt: string;

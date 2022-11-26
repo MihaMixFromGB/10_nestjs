@@ -3,5 +3,6 @@ export interface News {
   title: string;
   description: string;
   author?: string;
+  cover?: string;
   createdAt: string;
 }

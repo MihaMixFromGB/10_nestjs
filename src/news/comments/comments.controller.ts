@@ -6,12 +6,21 @@ import {
   Post,
   Patch,
   Delete,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 import { CommentsService } from './comments.service';
 import { Comment } from './comment.interface';
 import { CommentDto } from './comment.dto';
+import { HelperFileLoader } from '../../utils/HelperFileLoader';
 
+const PATH_COMMENTS = '/images/';
+const helperFileLoader = new HelperFileLoader();
+helperFileLoader.path = PATH_COMMENTS;
 @Controller('api/news/:newsId/comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
@@ -30,8 +39,27 @@ export class CommentsController {
   }
 
   @Post()
-  async create(@Body() commentDto: CommentDto): Promise<Comment> {
-    return this.commentsService.create(commentDto);
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: helperFileLoader.destinationPath,
+        filename: helperFileLoader.customFileName,
+      }),
+    }),
+  )
+  async create(
+    @Body() commentDto: CommentDto,
+    @UploadedFile() avatar: Express.Multer.File,
+  ): Promise<Comment> {
+    let avatarPath = '';
+    if (avatar?.filename?.length > 0) {
+      avatarPath = PATH_COMMENTS + avatar.filename;
+    }
+
+    return this.commentsService.create({
+      ...commentDto,
+      avatar: avatarPath,
+    });
   }
 
   @Patch(':id')

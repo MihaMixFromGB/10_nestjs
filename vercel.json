@@ -6,10 +6,5 @@
             "dest": "api/vercel.ts"
         }
     ],
-    "functions": {
-        "api/vercel.ts": {
-          "includeFiles": "[assets, public]/**"
-        }
-    },
     "outputDirectory": "dist"
 }

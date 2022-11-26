@@ -9,15 +9,17 @@ export class NewsService {
     {
       id: '1',
       title: 'Peter Pan',
-      description: 'There must be a short description',
+      description: 'Here must be a short description...',
       author: 'J.M. Barrie',
+      cover: '/images/qJnUSuBesExYtg1762efZ.jpg',
       createdAt: '1904',
     },
     {
       id: '2',
       title: 'Hamlet',
-      description: 'There must be a short description',
+      description: 'Here must be a short description...',
       author: ' William Shakespeare',
+      cover: '/images/mElMqc1EuahvlM6uDqN1Z.jpg',
       createdAt: '1600',
     },
   ];

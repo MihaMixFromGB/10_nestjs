@@ -13,6 +13,9 @@ export class CommentDto implements Omit<Comment, 'id' | 'children'> {
   @IsString()
   author: string;
 
+  @IsOptional()
+  avatar: string;
+
   @IsString()
   text: string;
 }
