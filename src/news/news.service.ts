@@ -32,11 +32,11 @@ export class NewsService {
     return newNews;
   }
 
-  get(): News[] {
+  getAllNews(): News[] {
     return [...this.news];
   }
 
-  getById(id: string): News | null {
+  get(id: string): News | null {
     const idx = this.news.findIndex((item) => item.id === id);
     if (idx === -1) {
       // return null;

@@ -12,11 +12,11 @@ import {
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
 
 import { News } from './news.interface';
-import { CreateNewsDto, DeleteNewsDto, NewsDto } from './news.dto';
+import { NewsDto } from './news.dto';
 import { NewsService } from './news.service';
 
 @ApiTags('news')
-@Controller('news')
+@Controller('api/news')
 export class NewsController {
   constructor(private newsService: NewsService) {}
 
@@ -25,8 +25,8 @@ export class NewsController {
     status: 200,
     description: 'The news have been successfully found.',
   })
-  async getNews(): Promise<News[]> {
-    return this.newsService.get();
+  async getAllNews(): Promise<News[]> {
+    return this.newsService.getAllNews();
   }
   @Get(':id')
   @ApiResponse({
@@ -37,9 +37,9 @@ export class NewsController {
     status: 500,
     description: 'Internal server error. ID maybe is not correct.',
   })
-  async getNewsById(@Param('id') id: string): Promise<News | null> {
+  async getNews(@Param('id') id: string): Promise<News | null> {
     try {
-      return this.newsService.getById(id);
+      return this.newsService.get(id);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -53,10 +53,10 @@ export class NewsController {
     status: 400,
     description: 'Data validation has been failed.',
   })
-  async createNews(@Body() createNewsDto: CreateNewsDto): Promise<News> {
-    return this.newsService.create(createNewsDto);
+  async createNews(@Body() newsDto: NewsDto): Promise<News> {
+    return this.newsService.create(newsDto);
   }
-  @Put()
+  @Put(':id')
   @ApiResponse({
     status: 200,
     description: 'The news has been successfully updated.',
@@ -69,19 +69,26 @@ export class NewsController {
     status: 500,
     description: 'Internal server error. ID maybe is not correct.',
   })
-  async updateNews(@Body() news: NewsDto): Promise<void> {
+  async updateNews(
+    @Param('id') id: string,
+    @Body() newsDto: NewsDto,
+  ): Promise<void> {
     try {
-      this.newsService.update(news);
+      const updatedNews: News = {
+        ...newsDto,
+        id,
+      };
+      this.newsService.update(updatedNews);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  @Delete()
+  @Delete(':id')
   @ApiResponse({
     status: 200,
     description: 'The news has been successfully removed.',
   })
-  async removeNews(@Body() deleteNewsDto: DeleteNewsDto): Promise<void> {
-    this.newsService.remove(deleteNewsDto.id);
+  async removeNews(@Param('id') id: string): Promise<void> {
+    this.newsService.remove(id);
   }
 }
