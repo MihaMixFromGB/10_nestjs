@@ -8,13 +8,25 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 import { News } from './news.interface';
 import { NewsDto } from './news.dto';
 import { NewsService } from './news.service';
+import { HelperFileLoader } from '../utils/HelperFileLoader';
+import { FileTypeValidator } from '../utils/FileTypeValidator';
 
+const PATH_NEWS = '/images/';
+const helperFileLoader = new HelperFileLoader();
+helperFileLoader.path = PATH_NEWS;
+const fileValidator = new FileTypeValidator();
 @ApiTags('news')
 @Controller('api/news')
 export class NewsController {
@@ -44,7 +56,16 @@ export class NewsController {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
   @Post()
+  @UseInterceptors(
+    FileInterceptor('cover', {
+      storage: diskStorage({
+        destination: helperFileLoader.destinationPath,
+        filename: helperFileLoader.customFileName,
+      }),
+    }),
+  )
   @ApiResponse({
     status: 201,
     description: 'The news has been successfully created.',
@@ -53,9 +74,43 @@ export class NewsController {
     status: 400,
     description: 'Data validation has been failed.',
   })
-  async createNews(@Body() newsDto: NewsDto): Promise<News> {
-    return this.newsService.create(newsDto);
+  async createNews(
+    @Body() newsDto: NewsDto,
+    @UploadedFile() cover: Express.Multer.File,
+  ): Promise<News> {
+    let coverPath = '';
+    if (cover?.filename?.length > 0) {
+      coverPath = PATH_NEWS + cover.filename;
+    }
+
+    return this.newsService.create({
+      ...newsDto,
+      cover: coverPath,
+    });
   }
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: helperFileLoader.destinationPath,
+        filename: helperFileLoader.customFileName,
+      }),
+      fileFilter: fileValidator.fileFilter,
+    }),
+  )
+  async upload(
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<string> {
+    console.log('req.fileValidationError', req.fileValidationError);
+    if (req.fileValidationError) {
+      throw new HttpException(req.fileValidationError, HttpStatus.BAD_REQUEST);
+    }
+
+    return `${file.originalname} has been loaded!`;
+  }
+
   @Put(':id')
   @ApiResponse({
     status: 200,
@@ -83,6 +138,7 @@ export class NewsController {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
   @Delete(':id')
   @ApiResponse({
     status: 200,

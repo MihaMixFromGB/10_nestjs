@@ -4,5 +4,6 @@ export interface Comment {
   parentId: string | null;
   children: Record<string, Comment>;
   author: string;
+  avatar: string;
   text: string;
 }
