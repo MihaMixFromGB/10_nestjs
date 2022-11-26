@@ -28,7 +28,7 @@ const helperFileLoader = new HelperFileLoader();
 helperFileLoader.path = PATH_NEWS;
 const fileValidator = new FileTypeValidator();
 @ApiTags('news')
-@Controller('api/news')
+@Controller('news')
 export class NewsController {
   constructor(private newsService: NewsService) {}
 
