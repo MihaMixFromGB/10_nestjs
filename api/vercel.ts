@@ -14,7 +14,7 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.useStaticAssets(join(__dirname, '..', 'assets/swagger-ui-dist/'), {
-    prefix: '/api',
+    prefix: '/swager',
   });
   app.engine('pug', pug.__express);
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
@@ -35,7 +35,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   // SwaggerModule.setup('api', app, document);
-  app.use('/api', swaggerUi.serve, swaggerUi.setup(document));
+  app.use('/swagger', swaggerUi.serve, swaggerUi.setup(document));
 
   await app.listen(3000);
   return app;
