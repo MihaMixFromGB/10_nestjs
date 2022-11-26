@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import pug from 'pug';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import swaggerUi from 'swagger-ui-express';
 import { AppModule } from '../src/app.module';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -33,7 +34,8 @@ async function bootstrap() {
     .addTag('news')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  // SwaggerModule.setup('api', app, document);
+  app.use('/api', swaggerUi.serve, swaggerUi.setup(document));
 
   await app.listen(3000);
   return app;
