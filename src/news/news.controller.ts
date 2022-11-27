@@ -23,6 +23,8 @@ import { NewsService } from './news.service';
 import { HelperFileLoader } from '../utils/HelperFileLoader';
 import { FileTypeValidator } from '../utils/FileTypeValidator';
 
+import { MailService } from '../mail/mail.service';
+
 const PATH_NEWS = '/images/';
 const helperFileLoader = new HelperFileLoader();
 helperFileLoader.path = PATH_NEWS;
@@ -30,7 +32,10 @@ const fileValidator = new FileTypeValidator();
 @ApiTags('api/news')
 @Controller('api/news')
 export class NewsController {
-  constructor(private newsService: NewsService) {}
+  constructor(
+    private newsService: NewsService,
+    private readonly mailService: MailService,
+  ) {}
 
   @Get()
   @ApiResponse({
@@ -83,10 +88,14 @@ export class NewsController {
       coverPath = PATH_NEWS + cover.filename;
     }
 
-    return this.newsService.create({
+    const newNews = this.newsService.create({
       ...newsDto,
       cover: coverPath,
     });
+
+    await this.mailService.sendNewNewsForAdmins(newNews);
+
+    return newNews;
   }
 
   @Post('upload')
@@ -133,6 +142,10 @@ export class NewsController {
         ...newsDto,
         id,
       };
+
+      const existedNews = this.newsService.get(id);
+      this.mailService.sendEditedNewsForAdmins(existedNews, updatedNews);
+
       this.newsService.update(updatedNews);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
