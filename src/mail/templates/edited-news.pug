@@ -1,0 +1,34 @@
+table
+  if existed.title === updated.title
+    tr
+      td Название
+      td #{updated.title}
+  else
+    tr
+      td Название (было)
+      td(style={'text-decoration': 'line-through'}) #{existed.title}
+    tr
+      td Название (стало)
+      td #{updated.title}
+  if existed.description === updated.description
+    tr
+      td Описание
+      td #{updated.description}
+  else
+    tr
+      td Описание (было)
+      td(style={'text-decoration': 'line-through'}) #{existed.description}
+    tr
+      td Описание (стало)
+      td #{updated.description}
+  tr
+    td Автор
+    td #{updated.author}
+  tr
+    td Дата создания
+    td #{updated.createdAt}
+  tr
+    td Ссылка на новость
+    td
+      a(href=`http://localhost:3000/news/${updated.id}/details`)
+        | http://localhost:3000/news/#{updated.id}/details

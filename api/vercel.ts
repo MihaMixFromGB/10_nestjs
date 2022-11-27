@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import pug from 'pug';
+// import pug from 'pug';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import swaggerUi from 'swagger-ui-express';
 import { AppModule } from '../src/app.module';
@@ -16,7 +16,7 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'assets/swagger-ui-dist/'), {
     prefix: '/swagger',
   });
-  app.engine('pug', pug.__express);
+  // app.engine('pug', pug.__express);
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('pug');
 

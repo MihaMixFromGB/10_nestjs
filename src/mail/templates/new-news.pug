@@ -1,0 +1,18 @@
+table
+  tr
+    td Название
+    td #{title}
+  tr
+    td Описание
+    td #{description}
+  tr
+    td Автор
+    td #{author}
+  tr
+    td Дата создания
+    td #{createdAt}
+  tr
+    td Ссылка на новость
+    td
+      a(href=`http://localhost:3000/news/${id}/details`)
+        | http://localhost:3000/news/#{id}/details
