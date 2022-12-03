@@ -1,21 +1,25 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
-import { Comment } from './comment.interface';
+import { IComment } from './comment.interface';
 
-export class CommentDto implements Omit<Comment, 'id' | 'children'> {
+export class CommentDto
+  implements
+    Omit<
+      IComment,
+      'id' | 'parent' | 'children' | 'user' | 'createdAt' | 'updatedAt'
+    >
+{
   @IsString()
-  newsId: string;
+  @IsNotEmpty()
+  message: string;
 
+  @IsNumber()
   @IsOptional()
-  @IsString()
-  parentId: string | null;
+  parentId: number;
 
-  @IsString()
-  author: string;
+  @IsNumber()
+  newsId: number;
 
-  @IsOptional()
-  avatar: string;
-
-  @IsString()
-  text: string;
+  @IsNumber()
+  userId: number;
 }

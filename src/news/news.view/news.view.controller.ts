@@ -1,27 +1,27 @@
 import { Controller, Get, Render, Param } from '@nestjs/common';
 
 import { NewsService } from '../news.service';
-import { CommentsViewService } from '../comments/comments.view/comments.view.service';
+import { CommentsService } from '../comments/comments.service';
 
 @Controller('news')
 export class NewsVmController {
   constructor(
-    private readonly newsService: NewsService,
-    private readonly commentsViewService: CommentsViewService,
+    private newsService: NewsService,
+    private commentsService: CommentsService,
   ) {}
 
   @Get()
   @Render('news')
   async getAllNews() {
-    return { news: this.newsService.getAllNews() };
+    return { news: await this.newsService.findAll() };
   }
 
-  @Get(':id/details')
+  @Get(':id')
   @Render('news-details')
-  async getNews(@Param('id') id: string) {
+  async getNews(@Param('id') id: number) {
     return {
-      news: this.newsService.get(id),
-      comments: this.commentsViewService.getAllComments(id),
+      news: await this.newsService.findById(id),
+      comments: await this.commentsService.findAllByNews(id),
     };
   }
 }

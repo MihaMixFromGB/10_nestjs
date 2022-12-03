@@ -23,7 +23,7 @@ table
       td #{updated.description}
   tr
     td Автор
-    td #{updated.author}
+    td=`${author.firstName} ${author.lastName}`
   tr
     td Дата создания
     td #{updated.createdAt}

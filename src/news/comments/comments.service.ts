@@ -1,32 +1,81 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TreeRepository } from 'typeorm';
 
-import { CommentsStore } from './comments.store';
-import { Comment } from './comment.interface';
-import { CommentDto } from './comment.dto';
+import { Comment } from './comment.entity';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly store: CommentsStore) {
-    this.store.setDefaultValues();
+  constructor(
+    @InjectRepository(Comment)
+    private commentsRepository: TreeRepository<Comment>,
+  ) {}
+
+  async findAllByNews(newsId: number): Promise<Comment[]> {
+    const comments: Comment[] = [];
+
+    const rootComments = (
+      await this.commentsRepository.findRoots({ relations: ['user'] })
+    )
+      .filter((item) => item.newsId === newsId)
+      .sort(this.compareComments);
+
+    for (const comment of rootComments) {
+      const res = await this.convertTreeToArray(comment);
+      comments.push(...res);
+    }
+
+    return comments;
   }
 
-  public getAllComments(newsId: string): Comment[] {
-    return this.store.getAll(newsId);
+  async findById(id: number): Promise<Comment> {
+    return await this.commentsRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+  }
+  async create(newComment: Comment): Promise<Comment> {
+    return this.commentsRepository.save(newComment);
   }
 
-  public get(newsId: string, id: string): Comment {
-    return this.store.get(newsId, id);
+  async update(updatedComment: Comment): Promise<Comment> {
+    return this.commentsRepository.save(updatedComment);
   }
 
-  public create(commentDto: CommentDto): Comment {
-    return this.store.add(commentDto);
+  async remove(id: number): Promise<Comment> {
+    const deletedComment = await this.findById(id);
+
+    return this.commentsRepository.remove(deletedComment);
   }
 
-  public update(id: string, commentDto: CommentDto): boolean {
-    return this.store.update(id, commentDto);
+  private async convertTreeToArray(
+    parent: Comment,
+    arr?: Comment[],
+  ): Promise<Comment[]> {
+    arr = arr || [];
+
+    const _parent = { ...parent };
+    delete _parent.children;
+    arr.push(_parent);
+
+    const commentsTree = await this.commentsRepository.findDescendantsTree(
+      parent,
+      {
+        depth: 1,
+        relations: ['user'],
+      },
+    );
+
+    const children = commentsTree.children.sort(this.compareComments);
+
+    for (const comment of children) {
+      await this.convertTreeToArray(comment, arr);
+    }
+
+    return arr;
   }
 
-  public remove(id: string, commentDto: CommentDto): boolean {
-    return this.store.remove(id, commentDto);
+  private compareComments(item1: Comment, item2: Comment) {
+    return item1.createdAt.getTime() - item2.createdAt.getTime();
   }
 }

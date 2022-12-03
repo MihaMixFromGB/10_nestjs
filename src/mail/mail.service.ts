@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer/dist';
 
-import { News } from 'src/news/news.interface';
+import { INews } from 'src/news/news.interface';
+
+type INewsDetails = Pick<
+  INews,
+  'id' | 'title' | 'description' | 'author' | 'createdAt'
+>;
 
 @Injectable()
 export class MailService {
@@ -22,10 +27,10 @@ export class MailService {
       });
   }
 
-  public async sendNewNewsForAdmins(news: News): Promise<void> {
+  public async sendNewNewsForAdmins(news: INewsDetails): Promise<void> {
     console.log('Sending email about a new news to administrators');
 
-    const emails = process.env.ADMINS.split(',');
+    const emails = process.env.EMAIL_ADMINS.split(',');
     for (const email of emails) {
       await this.mailService
         .sendMail({
@@ -44,12 +49,12 @@ export class MailService {
   }
 
   public async sendEditedNewsForAdmins(
-    existedNews: News,
-    updatedNews: News,
+    existedNews: INewsDetails,
+    updatedNews: INewsDetails,
   ): Promise<void> {
     console.log('Sending email about an edited news to administrators');
 
-    const emails = process.env.ADMINS.split(',');
+    const emails = process.env.EMAIL_ADMINS.split(',');
     for (const email of emails) {
       await this.mailService
         .sendMail({

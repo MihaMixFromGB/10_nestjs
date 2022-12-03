@@ -9,10 +9,10 @@ import { join } from 'path';
   imports: [
     MailerModule.forRootAsync({
       useFactory: () => ({
-        transport: process.env.SMTP_CONN,
+        transport: process.env.EMAIL_SMTP_CONN,
         defaults: {
-          from: process.env.DEFAULT_FROM,
-          to: process.env.DEFAULT_TO,
+          from: process.env.EMAIL_DEFAULT_FROM,
+          to: process.env.EMAIL_DEFAULT_TO,
         },
         template: {
           dir: join(__dirname, 'templates'),

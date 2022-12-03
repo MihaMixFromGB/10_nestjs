@@ -13,16 +13,18 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
-
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
-import { News } from './news.interface';
-import { NewsDto } from './news.dto';
 import { NewsService } from './news.service';
+import { NewsDto } from './news.dto';
+import { News } from './news.entity';
+
 import { HelperFileLoader } from '../utils/HelperFileLoader';
 import { FileTypeValidator } from '../utils/FileTypeValidator';
 
+import { UsersService } from '../users/users.service';
+import { CategoriesService } from '../categories/categories.service';
 import { MailService } from '../mail/mail.service';
 
 const PATH_NEWS = '/images/';
@@ -34,7 +36,9 @@ const fileValidator = new FileTypeValidator();
 export class NewsController {
   constructor(
     private newsService: NewsService,
-    private readonly mailService: MailService,
+    private usersService: UsersService,
+    private categoriesService: CategoriesService,
+    private mailService: MailService,
   ) {}
 
   @Get()
@@ -42,9 +46,10 @@ export class NewsController {
     status: 200,
     description: 'The news have been successfully found.',
   })
-  async getAllNews(): Promise<News[]> {
-    return this.newsService.getAllNews();
+  async getAll(): Promise<News[]> {
+    return this.newsService.findAll();
   }
+
   @Get(':id')
   @ApiResponse({
     status: 200,
@@ -54,23 +59,15 @@ export class NewsController {
     status: 500,
     description: 'Internal server error. ID maybe is not correct.',
   })
-  async getNews(@Param('id') id: string): Promise<News | null> {
+  async getById(@Param('id') id: number): Promise<News> {
     try {
-      return this.newsService.get(id);
+      return this.newsService.findById(id);
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor('cover', {
-      storage: diskStorage({
-        destination: helperFileLoader.destinationPath,
-        filename: helperFileLoader.customFileName,
-      }),
-    }),
-  )
   @ApiResponse({
     status: 201,
     description: 'The news has been successfully created.',
@@ -79,21 +76,29 @@ export class NewsController {
     status: 400,
     description: 'Data validation has been failed.',
   })
-  async createNews(
-    @Body() newsDto: NewsDto,
-    @UploadedFile() cover: Express.Multer.File,
-  ): Promise<News> {
-    let coverPath = '';
-    if (cover?.filename?.length > 0) {
-      coverPath = PATH_NEWS + cover.filename;
+  async create(@Body() newsDto: NewsDto): Promise<News> {
+    const author = await this.usersService.findById(newsDto.authorId);
+    if (!author) {
+      new HttpException('Author is not found!', HttpStatus.BAD_REQUEST);
     }
 
-    const newNews = this.newsService.create({
+    const category = await this.categoriesService.findById(newsDto.categoryId);
+    if (!category) {
+      new HttpException('Category is not found!', HttpStatus.BAD_REQUEST);
+    }
+
+    let newNews = new News();
+    delete newsDto.authorId;
+    delete newsDto.categoryId;
+    newNews = await this.newsService.create({
+      ...newNews,
       ...newsDto,
-      cover: coverPath,
+      cover: !newsDto?.cover ? '' : PATH_NEWS + newsDto.cover,
+      author,
+      category,
     });
 
-    await this.mailService.sendNewNewsForAdmins(newNews);
+    // await this.mailService.sendNewNewsForAdmins(newNews);
 
     return newNews;
   }
@@ -108,11 +113,10 @@ export class NewsController {
       fileFilter: fileValidator.fileFilter,
     }),
   )
-  async upload(
+  async uploadImage(
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<string> {
-    console.log('req.fileValidationError', req.fileValidationError);
     if (req.fileValidationError) {
       throw new HttpException(req.fileValidationError, HttpStatus.BAD_REQUEST);
     }
@@ -133,20 +137,38 @@ export class NewsController {
     status: 500,
     description: 'Internal server error. ID maybe is not correct.',
   })
-  async updateNews(
-    @Param('id') id: string,
+  async update(
+    @Param('id') id: number,
     @Body() newsDto: NewsDto,
-  ): Promise<void> {
+  ): Promise<News> {
     try {
-      const updatedNews: News = {
-        ...newsDto,
-        id,
-      };
+      const author = await this.usersService.findById(newsDto.authorId);
+      if (!author) {
+        new HttpException('Author is not found!', HttpStatus.BAD_REQUEST);
+      }
 
-      const existedNews = this.newsService.get(id);
+      const category = await this.categoriesService.findById(
+        newsDto.categoryId,
+      );
+      if (!category) {
+        new HttpException('Category is not found!', HttpStatus.BAD_REQUEST);
+      }
+
+      const existedNews = await this.newsService.findById(id);
+      let updatedNews = new News();
+      delete newsDto.authorId;
+      delete newsDto.categoryId;
+      updatedNews = await this.newsService.update({
+        ...updatedNews,
+        ...newsDto,
+        author,
+        category,
+        id,
+      });
+
       this.mailService.sendEditedNewsForAdmins(existedNews, updatedNews);
 
-      this.newsService.update(updatedNews);
+      return updatedNews;
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -157,7 +179,7 @@ export class NewsController {
     status: 200,
     description: 'The news has been successfully removed.',
   })
-  async removeNews(@Param('id') id: string): Promise<void> {
-    this.newsService.remove(id);
+  async remove(@Param('id') id: number): Promise<News> {
+    return this.newsService.remove(id);
   }
 }
