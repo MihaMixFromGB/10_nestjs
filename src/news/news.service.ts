@@ -1,68 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { nanoid } from 'nanoid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-import { News } from './news.interface';
+import { News } from './news.entity';
 
 @Injectable()
 export class NewsService {
-  private readonly news: News[] = [
-    {
-      id: '1',
-      title: 'Peter Pan',
-      description: 'Here must be a short description...',
-      author: 'J.M. Barrie',
-      cover: '/images/qJnUSuBesExYtg1762efZ.jpg',
-      createdAt: '1904',
-    },
-    {
-      id: '2',
-      title: 'Hamlet',
-      description: 'Here must be a short description...',
-      author: ' William Shakespeare',
-      cover: '/images/mElMqc1EuahvlM6uDqN1Z.jpg',
-      createdAt: '1600',
-    },
-  ];
+  constructor(
+    @InjectRepository(News)
+    private newsRepository: Repository<News>,
+  ) {}
 
-  create(item: Omit<News, 'id'>): News {
-    const newNews = {
-      ...item,
-      id: nanoid(),
-    };
-    this.news.push(newNews);
-
-    return newNews;
+  async findAll(): Promise<News[]> {
+    return await this.newsRepository.find({
+      relations: ['author', 'category'],
+    });
   }
 
-  getAllNews(): News[] {
-    return [...this.news];
+  async findById(id: number): Promise<News> {
+    return await this.newsRepository.findOne({
+      where: { id },
+      relations: ['author', 'category'],
+    });
   }
 
-  get(id: string): News | null {
-    const idx = this.news.findIndex((item) => item.id === id);
-    if (idx === -1) {
-      // return null;
-      throw new Error('The news is not found!');
-    }
-    return { ...this.news[idx] };
+  async findByAuthorId(authorId: number): Promise<News> {
+    return await this.newsRepository.findOne({
+      where: { author: { id: authorId } },
+      relations: ['author', 'category'],
+    });
   }
 
-  update(newItem: News): boolean {
-    const idx = this.news.findIndex((item) => item.id === newItem.id);
-    if (idx === -1) {
-      // return false;
-      throw new Error('The news is not found!');
-    }
-    this.news[idx] = { ...newItem };
-    return true;
+  async create(newNews: News): Promise<News> {
+    return await this.newsRepository.save(newNews);
   }
 
-  remove(id: string): boolean {
-    const idx = this.news.findIndex((item) => item.id === id);
-    if (idx === -1) {
-      return false;
-    }
-    this.news.splice(idx, 1);
-    return true;
+  async update(updatedNews: News): Promise<News> {
+    return await this.newsRepository.save(updatedNews);
+  }
+
+  async remove(id: number): Promise<News> {
+    const deletedNews = await this.findById(id);
+
+    return await this.newsRepository.remove(deletedNews);
   }
 }

@@ -1,9 +1,15 @@
-export interface Comment {
-  id: string;
-  newsId: string;
-  parentId: string | null;
-  children: Record<string, Comment>;
-  author: string;
-  avatar: string;
-  text: string;
+import { User } from 'src/users/user.entity';
+import { Comment } from './comment.entity';
+
+export interface IComment {
+  id: number;
+  parentId?: number;
+  parent?: Comment;
+  children: Comment[];
+  message: string;
+  newsId: number;
+  userId: number;
+  user: User;
+  createdAt: Date;
+  updatedAt: Date;
 }

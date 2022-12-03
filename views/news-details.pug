@@ -1,18 +1,17 @@
 extends layout.pug
 
 mixin comment(item)
-  div(style={'margin-left': `${(item.level-1)*10}px`})
-    div
-      if item.avatar 
-        img(class='w-12 h-12' src=item.avatar)
-        p(class='text-sm text-stone-500') #{item.author}
-      p #{item.text}
+  div
+    if item.user.avatar 
+      img(class='w-12 h-12' src=`/images/${item.user.avatar}`)
+    p(class='text-sm text-stone-500') #{`${item.user.firstName} ${item.user.lastName}`}
+    p #{item.message}
 
 block content
   div(class='flex flex-col items-center pt-2')
     h1(class='text-xl font-bold text-stone-800') #{news.title}
-    p(class='text-sm text-stone-500') Author: #{news.author}
-    p(class='text-sm text-stone-500') Created at: #{news.createdAt}
+    p(class='text-sm text-stone-500') Author: #{`${news.author.firstName} ${news.author.lastName}`}
+    p(class='text-sm text-stone-500') Created at: #{news.createdAt.toLocaleString('ru')}
     p #{news.description}
     div(class='self-start sm:mx-3')
       h2(class='text-lg font-bold text-stone-800') Comments

@@ -7,6 +7,6 @@ block content
         if item.cover 
           img(class='object-cover w-full h-48' src=item.cover)
         h2(class='text-xl font-bold text-stone-800')= item.title
-        p(class='text-sm text-stone-500') Author: #{item.author}
-        p(class='text-sm text-stone-500') Created at: #{item.createdAt}
+        p(class='text-sm text-stone-500') Author: #{`${item.author.firstName} ${item.author.lastName}`}
+        p(class='text-sm text-stone-500') Created at: #{item.createdAt.toLocaleString('ru')}
         p= item.description

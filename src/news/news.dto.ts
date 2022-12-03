@@ -1,29 +1,32 @@
-import { IsNotEmpty, IsDateString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { News } from './news.interface';
+import { INews } from './news.interface';
 
-export class NewsDto implements Omit<News, 'id'> {
+export class NewsDto
+  implements
+    Omit<INews, 'id' | 'author' | 'category' | 'createdAt' | 'updatedAt'>
+{
+  @IsString()
   @IsNotEmpty()
   @ApiProperty({ default: 'new author' })
   title: string;
 
-  @IsNotEmpty()
+  @IsString()
   @ApiProperty({ default: 'new description' })
   description: string;
 
-  @IsOptional()
-  @ApiProperty()
-  @ApiPropertyOptional({ default: 'new author' })
-  author?: string;
+  @IsNumber()
+  @ApiPropertyOptional({ default: 1 })
+  authorId: number;
 
   @IsOptional()
-  @ApiProperty()
-  @ApiPropertyOptional({ default: 'qJnUSuBesExYtg1762efZ.jpg' })
-  cover?: string;
-
+  @IsString()
   @IsNotEmpty()
-  @IsDateString()
-  @ApiProperty({ default: '2022' })
-  createdAt: string;
+  @ApiPropertyOptional({ default: 'qJnUSuBesExYtg1762efZ.jpg' })
+  cover: string;
+
+  @IsNumber()
+  @ApiProperty({ default: 1 })
+  categoryId: number;
 }

@@ -6,15 +6,13 @@ import {
   Post,
   Patch,
   Delete,
-  UploadedFile,
-  UseInterceptors,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-
 import { CommentsService } from './comments.service';
-import { Comment } from './comment.interface';
+import { UsersService } from 'src/users/users.service';
+import { Comment } from './comment.entity';
 import { CommentDto } from './comment.dto';
 import { HelperFileLoader } from '../../utils/HelperFileLoader';
 
@@ -23,58 +21,67 @@ const helperFileLoader = new HelperFileLoader();
 helperFileLoader.path = PATH_COMMENTS;
 @Controller('api/news/:newsId/comments')
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private commentsService: CommentsService,
+    private usersService: UsersService,
+  ) {}
 
   @Get()
-  async getAllComments(@Param('newsId') newsId: string): Promise<Comment[]> {
-    return this.commentsService.getAllComments(newsId);
+  async getAllComments(@Param('newsId') newsId: number): Promise<Comment[]> {
+    return this.commentsService.findAllByNews(newsId);
   }
 
   @Get(':commentId')
-  async get(
-    @Param('newsId') newsId: string,
-    @Param('commentId') commentId: string,
-  ): Promise<Comment> {
-    return this.commentsService.get(newsId, commentId);
+  async getById(@Param('commentId') commentId: number): Promise<Comment> {
+    return this.commentsService.findById(commentId);
   }
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: helperFileLoader.destinationPath,
-        filename: helperFileLoader.customFileName,
-      }),
-    }),
-  )
-  async create(
-    @Body() commentDto: CommentDto,
-    @UploadedFile() avatar: Express.Multer.File,
-  ): Promise<Comment> {
-    let avatarPath = '';
-    if (avatar?.filename?.length > 0) {
-      avatarPath = PATH_COMMENTS + avatar.filename;
+  async create(@Body() commentDto: CommentDto): Promise<Comment> {
+    let newComment = new Comment();
+
+    const user = await this.usersService.findById(commentDto.userId);
+    if (!user) {
+      new HttpException('User is not found!', HttpStatus.BAD_REQUEST);
     }
 
-    return this.commentsService.create({
+    if (commentDto.parentId) {
+      newComment.parent = await this.commentsService.findById(
+        commentDto.parentId,
+      );
+    }
+    newComment = {
+      ...newComment,
       ...commentDto,
-      avatar: avatarPath,
-    });
+      user,
+    };
+
+    return this.commentsService.create(newComment);
   }
 
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() commentDto: CommentDto,
-  ): Promise<boolean> {
-    return this.commentsService.update(id, commentDto);
+  ): Promise<Comment> {
+    const user = await this.usersService.findById(commentDto.userId);
+    if (!user) {
+      new HttpException('User is not found!', HttpStatus.BAD_REQUEST);
+    }
+
+    let updatedComment = await this.commentsService.findById(id);
+    updatedComment = {
+      ...updatedComment,
+      ...commentDto,
+      user,
+      id,
+    };
+
+    return this.commentsService.update(updatedComment);
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @Body() commentDto: CommentDto,
-  ): Promise<boolean> {
-    return this.commentsService.remove(id, commentDto);
+  async remove(@Param('id') id: number): Promise<Comment> {
+    return this.commentsService.remove(id);
   }
 }
