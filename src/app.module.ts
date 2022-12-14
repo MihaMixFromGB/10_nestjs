@@ -14,6 +14,7 @@ import { User } from './users/user.entity';
 import { News } from './news/news.entity';
 import { Category } from './categories/category.entity';
 import { Comment } from './news/comments/comment.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Comment } from './news/comments/comment.entity';
     MailModule,
     UsersModule,
     CategoriesModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
