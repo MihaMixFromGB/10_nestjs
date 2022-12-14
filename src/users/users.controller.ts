@@ -6,12 +6,17 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { User } from './user.entity';
 import { UserDto } from './user.dto';
 
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ProfilesGuard } from '../auth/profiles/profiles.guard';
+
+@UseGuards(JwtAuthGuard)
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -31,8 +36,12 @@ export class UsersController {
     return this.usersService.create(userDto);
   }
 
+  @UseGuards(ProfilesGuard)
   @Patch(':id')
-  update(@Param('id') id: number, @Body() userDto: UserDto): Promise<User> {
+  update(
+    @Param('id') id: number,
+    @Body() userDto: Partial<UserDto>,
+  ): Promise<User> {
     return this.usersService.update(id, userDto);
   }
 

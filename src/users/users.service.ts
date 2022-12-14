@@ -19,6 +19,10 @@ export class UsersService {
     return await this.usersRepository.findOneBy({ id });
   }
 
+  async findByEmail(email: string): Promise<User> {
+    return await this.usersRepository.findOneBy({ email });
+  }
+
   async create(userDto: UserDto): Promise<User> {
     let newUser = new User();
     newUser = {
@@ -29,7 +33,7 @@ export class UsersService {
     return await this.usersRepository.save(newUser);
   }
 
-  async update(id: number, userDto: UserDto): Promise<User> {
+  async update(id: number, userDto: Partial<UserDto>): Promise<User> {
     let updatedUser = new User();
     updatedUser = {
       ...updatedUser,
